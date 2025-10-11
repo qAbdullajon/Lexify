@@ -174,7 +174,7 @@ export default function VocabLearner() {
         ) : (
           <div className="space-y-6">
             {/* Language Toggle Buttons */}
-            <div className="flex flex-col gap-3 items-center justify-between">
+            <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
               {/* Page Navigation */}
               <div className="flex items-center gap-5">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">
