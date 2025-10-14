@@ -106,8 +106,7 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
             transform: "rotateY(180deg)",
           }}
         >
-          <div className="flex items-center justify-center gap-3 mb-4">
-
+          <div className="flex items-center justify-center gap-1 mb-4 mr-5">
             <button
               onClick={(e) => {
                 e.stopPropagation()
