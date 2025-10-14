@@ -18,6 +18,7 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
   const [isTranslating, setIsTranslating] = useState(false)
 
   useEffect(() => {
+    console.log(isFlipped)
     if (!isFlipped && language === "en") {
       playAudio(word.en, "en")
       setShowTranslation(false)
@@ -38,7 +39,6 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
       setShowTranslation(!showTranslation)
       return
     }
-
     setIsTranslating(true)
     try {
       const response = await fetch(
@@ -69,7 +69,7 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
     <div className="perspective-1000">
       <Card
         onClick={handleCardClick}
-        className={`relative h-[400px] transition-transform duration-500 preserve-3d ${!isFlipped ? "cursor-pointer" : ""
+        className={`relative h-[400px] ${!isFlipped ? "cursor-pointer" : "transition-transform duration-500"
           }`}
         style={{
           transformStyle: "preserve-3d",
