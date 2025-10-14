@@ -124,40 +124,48 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
           <h2 className="text-5xl font-bold text-center text-balance mb-8">{word.uz}</h2>
 
           <div className="w-full max-w-md space-y-4">
-            <div className="flex items-center justify-center gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  playAudio(word.exampleText, "en")
-                }}
-                className="p-1.5 rounded-full hover:bg-secondary transition-colors"
-                aria-label="Play example audio"
-              >
-                <Volume2 className="w-4 h-4 text-primary" />
-              </button>
-              <p className="text-base italic text-pretty text-center">"{word.exampleText}"</p>
-            </div>
+            {
+              word.exampleText && (
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      playAudio(word.exampleText, "en")
+                    }}
+                    className="p-1.5 rounded-full hover:bg-secondary transition-colors"
+                    aria-label="Play example audio"
+                  >
+                    <Volume2 className="w-4 h-4 text-primary" />
+                  </button>
+                  <p className="text-base italic text-pretty text-center">"{word.exampleText}"</p>
+                </div>
+              )
+            }
 
             {showTranslation && translatedText && (
               <p className="text-sm text-muted-foreground italic text-center">"{translatedText}"</p>
             )}
 
-            <div className="flex justify-center">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  translateText()
-                }}
-                disabled={isTranslating}
-                className="flex items-center gap-2 p-2 rounded-full hover:bg-secondary transition-colors disabled:opacity-50"
-                aria-label="Translate example"
-              >
-                <Languages className="w-4 h-4 text-primary" />
-                <span className="text-sm">
-                  {isTranslating ? "Translating..." : showTranslation ? "Hide" : "Translate"}
-                </span>
-              </button>
-            </div>
+            {
+              word.exampleText && (
+                <div className="flex justify-center">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      translateText()
+                    }}
+                    disabled={isTranslating}
+                    className="flex items-center gap-2 p-2 rounded-full hover:bg-secondary transition-colors disabled:opacity-50"
+                    aria-label="Translate example"
+                  >
+                    <Languages className="w-4 h-4 text-primary" />
+                    <span className="text-sm">
+                      {isTranslating ? "Translating..." : showTranslation ? "Hide" : "Translate"}
+                    </span>
+                  </button>
+                </div>
+              )
+            }
           </div>
         </div>
       </Card>
