@@ -23,13 +23,14 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
       if (language === "en") {
         playAudio(word.en, "en")
       }
-      setShowTranslation(false)
-      setTranslatedText("")
-      setSelectedWords([])
-      setIsCorrect(null)
     } else {
       translateText()
     }
+    setShowTranslation(false)
+    setTranslatedText("")
+    setSelectedWords([])
+    setIsCorrect(null)
+    setIsExampleText(false)
   }, [word, isFlipped])
 
   useEffect(() => {
@@ -101,11 +102,6 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
     setTimeout(() => {
       setIsCorrect(null)
     }, 2000)
-    // if (isSentenceCorrect) {
-    //   playAudio("Correct! Well done!", "en")
-    // } else {
-    //   playAudio("Incorrect. Try again.", "en")
-    // }
   }
 
   useEffect(() => {
@@ -124,10 +120,10 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
   }
 
   return (
-    <div className="perspective-1000">
+    <div className="perspective-1000 w-full mx-auto">
       <Card
         onClick={handleCardClick}
-        className={`relative h-[550px] sm:h-[500px] ${!isFlipped ? "cursor-pointer" : "transition-transform duration-500"
+        className={`relative w-full h-[400px] sm:h-[450px] md:h-[500px] lg:h-[550px] ${!isFlipped ? "cursor-pointer" : "transition-transform duration-500"
           }`}
         style={{
           transformStyle: "preserve-3d",
@@ -135,10 +131,10 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
         }}
       >
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center p-2 backface-hidden text-center"
+          className="absolute inset-0 flex flex-col items-center justify-center p-4 backface-hidden text-center"
           style={{ backfaceVisibility: "hidden" }}
         >
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4">
             {
               language === "en" && (
                 <button
@@ -146,45 +142,45 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
                     e.stopPropagation()
                     playAudio(word.en, "en")
                   }}
-                  className="p-2 rounded-full hover:bg-secondary transition-colors"
+                  className="p-1.5 sm:p-2 rounded-full hover:bg-secondary transition-colors"
                   aria-label="Play audio"
                 >
-                  <Volume2 className="w-6 h-6 text-primary" />
+                  <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                 </button>
               )
             }
-            <h2 className="text-5xl font-bold text-center text-balance">{word[language]}</h2>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center text-balance px-2">{word[language]}</h2>
           </div>
         </div>
 
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center p-2 backface-hidden bg-card text-center"
+          className="absolute inset-0 flex flex-col items-center justify-center p-3 sm:p-4 backface-hidden bg-card text-center overflow-y-auto"
           style={{
             backfaceVisibility: "hidden",
             transform: "rotateY(180deg)",
           }}
         >
-          <div className="flex items-center justify-center gap-1 mb-4 mr-5">
+          <div className="flex items-center justify-center gap-1 sm:gap-2 mb-3 sm:mb-4">
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 playAudio(word.en, "en")
               }}
-              className="p-2 rounded-full hover:bg-secondary transition-colors"
+              className="p-1.5 rounded-full hover:bg-secondary transition-colors"
               aria-label="Play audio"
             >
-              <Volume2 className="w-5 h-5 text-primary" />
+              <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </button>
-            <h3 className="text-2xl font-semibold text-muted-foreground text-center">{word.en}</h3>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-muted-foreground text-center">{word.en}</h3>
           </div>
 
-          <h2 className="text-5xl font-bold text-center text-balance mb-8">{word.uz}</h2>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center text-balance mb-4 sm:mb-6 md:mb-8 px-2">{word.uz}</h2>
 
-          <div className="w-full max-w-md space-y-4">
+          <div className="w-full max-w-sm space-y-3 sm:space-y-4">
             {
               word.exampleText && (
-                <div className="mb-6">
-                  <p className="text-lg italic text-pretty text-center text-blue-400 font-medium">
+                <div className="mb-4 sm:mb-6">
+                  <p className="text-sm sm:text-base md:text-lg italic text-pretty text-center text-blue-400 font-medium px-2">
                     "{translatedText || "Loading translation..."}"
                   </p>
                 </div>
@@ -192,7 +188,7 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
             }
 
             {/* Selected words (user's sentence) */}
-            <div className="py-3 border-y min-h-[70px] border-white/30 mb-6 flex flex-wrap gap-2 justify-center items-center">
+            <div className="py-2 sm:py-3 border-y min-h-[60px] sm:min-h-[70px] border-white/30 mb-4 sm:mb-6 flex flex-wrap gap-1 sm:gap-2 justify-center items-center px-2">
               {selectedWords.length === 0 ? (
                 ""
               ) : (
@@ -203,7 +199,7 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
                       e.stopPropagation()
                       handleWordRemove(word, index)
                     }}
-                    className="px-3 py-2 border-[1px] border-white/30 border-b-[4px] active:text-blue-400 active:border-blue-400 text-primary-foreground rounded-lg transition-all"
+                    className="px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm border-[1px] border-white/30 border-b-[3px] active:text-blue-400 active:border-blue-400 text-primary-foreground rounded-lg transition-all"
                   >
                     {word}
                   </button>
@@ -212,7 +208,7 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
             </div>
 
             {/* Available words */}
-            <div className="flex flex-wrap gap-2 justify-center mb-4">
+            <div className="flex flex-wrap gap-1 sm:gap-2 justify-center mb-3 sm:mb-4 px-2">
               {availableWords.map((word, index) => (
                 <button
                   key={index}
@@ -220,7 +216,7 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
                     e.stopPropagation()
                     handleWordSelect(word, index)
                   }}
-                  className="px-3 py-2 border-[1px] border-white/30 border-b-[4px] active:text-blue-400 active:border-blue-400 text-primary-foreground rounded-lg transition-all"
+                  className="px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm border-[1px] border-white/30 border-b-[3px] active:text-blue-400 active:border-blue-400 text-primary-foreground rounded-lg transition-all"
                 >
                   {word}
                 </button>
@@ -230,27 +226,27 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
 
             {
               word.exampleText && isExampeText && (
-                <div className="flex items-center justify-center gap-2 mt-4">
+                <div className="flex items-center justify-center gap-2 mt-3 sm:mt-4 px-2">
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
                       playAudio(word.exampleText, "en")
                     }}
-                    className="p-1.5 rounded-full hover:bg-secondary transition-colors"
+                    className="p-1 rounded-full hover:bg-secondary transition-colors"
                     aria-label="Play example audio"
                   >
-                    <Volume2 className="w-4 h-4 text-primary" />
+                    <Volume2 className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
                   </button>
-                  <p className="text-sm italic text-pretty text-center">"{word.exampleText}"</p>
+                  <p className="text-xs sm:text-sm italic text-pretty text-center">"{word.exampleText}"</p>
                 </div>
               )
             }
 
             {/* Check button and result */}
-            <div className="flex flex-col items-center gap-3">
+            <div className="flex flex-col items-center gap-2 sm:gap-3 px-2">
               {isCorrect !== null && (
                 <div
-                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-500 ${isCorrect
+                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium transition-all duration-500 text-xs sm:text-sm ${isCorrect
                     ? "bg-green-100 text-green-800 border border-green-300"
                     : "bg-red-100 text-red-800 border border-red-300"
                     }`}
@@ -260,13 +256,16 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
               )}
             </div>
 
-            <div className="flex items-center justify-center">
-              <button onClick={() => setIsExampleText(!isExampeText)} className="w-8 h-8 active:bg-white/30 rounded-full flex items-center justify-center">
+            <div className="flex items-center justify-center pt-2">
+              <button
+                onClick={() => setIsExampleText(!isExampeText)}
+                className="w-7 h-7 sm:w-8 sm:h-8 active:bg-white/30 rounded-full flex items-center justify-center"
+              >
                 {
                   !isExampeText ? (
-                    <Languages className="text-blue-400" size={18} />
+                    <Languages className="text-blue-400" size={16} />
                   ) : (
-                    <X className="text-blue-400" size={18} />
+                    <X className="text-blue-400" size={16} />
                   )
                 }
               </button>

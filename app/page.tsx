@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Download, BookOpen } from "lucide-react"
+import { Download, BookOpen, Loader2, Database } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Input } from "@/components/ui/input" // Input komponentini qo'shing
+import { Input } from "@/components/ui/input"
 import FileUpload from "@/components/file-upload"
 import Flashcard from "@/components/flashcard"
 import { type VocabWord, validateJSON } from "@/lib/vocab-utils"
@@ -16,8 +16,11 @@ export default function VocabLearner() {
   const [error, setError] = useState<string | null>(null)
   const [isFlipped, setIsFlipped] = useState(false)
   const [language, setLanguage] = useState<"en" | "uz">("en")
-  const [pageInput, setPageInput] = useState("") // Input qiymati
+  const [pageInput, setPageInput] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [fetchLoading, setFetchLoading] = useState(false)
 
+  // LocalStorage dan yuklash
   useEffect(() => {
     const saved = localStorage.getItem("vocabulary")
     if (saved) {
@@ -30,32 +33,82 @@ export default function VocabLearner() {
     }
   }, [])
 
+  // Database dan vocabulary olish
+  const fetchVocabularyFromDB = async () => {
+    setFetchLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/vocabulary')
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch vocabulary from database')
+      }
+
+      const data = await response.json()
+
+      if (Array.isArray(data) && data.length > 0) {
+        setVocabulary(data)
+        setCurrentIndex(0)
+        setIsFlipped(false)
+        setPageInput("")
+
+        // LocalStorage ga ham saqlaymiz
+        localStorage.setItem("vocabulary", JSON.stringify(data))
+
+        console.log(`Loaded ${data.length} words from database`)
+      } else {
+        setError("No vocabulary found in database")
+      }
+    } catch (error) {
+      console.error('Error fetching vocabulary:', error)
+      setError(`Failed to load vocabulary: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setFetchLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const saved = localStorage.getItem("vocabulary")
+    if (!saved) {
+      fetchVocabularyFromDB()
+    }
+  }, [])
+
   useEffect(() => {
     if (vocabulary.length > 0) {
       localStorage.setItem("vocabulary", JSON.stringify(vocabulary))
     }
   }, [vocabulary])
 
-  const handleFileUpload = (content: string) => {
+  const handleFileUpload = async (content: string) => {
+    setLoading(true)
     setError(null)
-    const result = validateJSON(content)
 
-    if (!result.valid) {
-      setError(result.error || "Invalid JSON format")
-      return
+    try {
+      const result = validateJSON(content)
+
+      if (!result.valid) {
+        setError(result.error || "Invalid JSON format")
+        return
+      }
+
+      setVocabulary(result.data!)
+      setCurrentIndex(0)
+      setIsFlipped(false)
+      setPageInput("")
+    } catch (error) {
+      setError(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setLoading(false)
     }
-
-    setVocabulary(result.data!)
-    setCurrentIndex(0)
-    setIsFlipped(false)
-    setPageInput("") // Inputni tozalash
   }
 
   const handleNext = () => {
     if (currentIndex < vocabulary.length - 1) {
       setCurrentIndex(currentIndex + 1)
       setIsFlipped(false)
-      setPageInput(String(currentIndex + 2)) // Inputni yangilash
+      setPageInput(String(currentIndex + 2))
     }
   }
 
@@ -63,7 +116,7 @@ export default function VocabLearner() {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1)
       setIsFlipped(false)
-      setPageInput(String(currentIndex)) // Inputni yangilash
+      setPageInput(String(currentIndex))
     }
   }
 
@@ -71,60 +124,27 @@ export default function VocabLearner() {
     const randomIndex = Math.floor(Math.random() * vocabulary.length)
     setCurrentIndex(randomIndex)
     setIsFlipped(false)
-    setPageInput(String(randomIndex + 1)) // Inputni yangilash
+    setPageInput(String(randomIndex + 1))
   }
 
-  const handleExport = () => {
-    const dataStr = JSON.stringify(vocabulary, null, 2)
-    const dataBlob = new Blob([dataStr], { type: "application/json" })
-    const url = URL.createObjectURL(dataBlob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = "vocabulary.json"
-    link.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const handleClearVocabulary = () => {
-    setVocabulary([])
-    setCurrentIndex(0)
-    setIsFlipped(false)
-    setPageInput("") // Inputni tozalash
-    localStorage.removeItem("vocabulary")
-  }
-
-  // Page navigation funksiyasi
   const handlePageNavigation = () => {
     const pageNumber = parseInt(pageInput)
     if (pageNumber >= 1 && pageNumber <= vocabulary.length) {
       setCurrentIndex(pageNumber - 1)
       setIsFlipped(false)
     } else {
-      // Agar noto'g'ri raqam kiritilsa, inputni hozirgi page ga qaytarish
       setPageInput(String(currentIndex + 1))
     }
   }
 
-  // Input o'zgarganda ham avtomatik navigatsiya qilish (ixtiyoriy)
   const handlePageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setPageInput(value)
-
-    // Faqat raqam kiritilganini tekshirish
-
   }
 
-  // Enter bosilganda navigatsiya qilish
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       handlePageNavigation()
-      if (/^\d+$/.test(pageInput)) {
-        const pageNumber = parseInt(pageInput)
-        if (pageNumber >= 1 && pageNumber <= vocabulary.length) {
-          setCurrentIndex(pageNumber - 1)
-          setIsFlipped(false)
-        }
-      }
     }
   }
 
@@ -140,6 +160,16 @@ export default function VocabLearner() {
           <p className="text-muted-foreground text-lg">Upload your English-Uzbek vocabulary and start learning</p>
         </header>
 
+        {/* Loading State */}
+        {(loading || fetchLoading) && (
+          <div className="flex items-center justify-center gap-2 mb-6 p-4 bg-blue-50 rounded-lg">
+            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+            <span className="text-blue-600">
+              {fetchLoading ? "Loading from database..." : "Processing vocabulary..."}
+            </span>
+          </div>
+        )}
+
         {/* Error Alert */}
         {error && (
           <Alert variant="destructive" className="mb-6">
@@ -148,58 +178,36 @@ export default function VocabLearner() {
         )}
 
         {/* Main Content */}
-        {vocabulary.length === 0 ? (
-          <Card className="p-8">
-            <FileUpload onUpload={handleFileUpload} />
-
-            <div className="mt-8 pt-8 border-t border-border">
-              <h3 className="text-lg font-semibold mb-3">Expected JSON Format:</h3>
-              <pre className="bg-secondary p-4 rounded-lg overflow-x-auto text-sm">
-                {`
-[
-  {
-    "uz": "alifbo tarzida",
-    "en": "alphabetical",
-    "exampleText": "The list was in alphabetical order."
-  },
-  {
-    "uz": "qatnashchi",
-    "en": "attendant",
-    "exampleText": "The attendant gave me a map."
-  }
-]`}
-              </pre>
-            </div>
-          </Card>
-        ) : (
-          <div className="space-y-6">
-            {/* Language Toggle Buttons */}
-            <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
-              {/* Page Navigation */}
-              <div className="flex items-center gap-5">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">
-                  Word {currentIndex + 1} of {vocabulary.length}
-                </span>
-                <div className="flex items-center gap-3">
-                  <Input
-                    type="text"
-                    value={pageInput}
-                    onChange={handlePageInputChange}
-                    onKeyPress={handleKeyPress}
-                    placeholder={`${currentIndex + 1}`}
-                    className="w-16 h-8 text-center text-sm"
-                  />
-                  <Button
-                    onClick={handlePageNavigation}
-                    size="sm"
-                    variant="outline"
-                    className="h-8 px-3"
-                  >
-                    Go
-                  </Button>
-                </div>
+        <div className="space-y-6">
+          {/* Database Actions & Language Toggle */}
+          <div className="flex flex-col min-[400px]:flex-row gap-3 items-center justify-between">
+            <div className="flex items-center gap-5">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">
+                Word {currentIndex + 1} of {vocabulary.length}
+              </span>
+              <div className="flex items-center gap-3">
+                <Input
+                  type="text"
+                  value={pageInput}
+                  onChange={handlePageInputChange}
+                  onKeyPress={handleKeyPress}
+                  placeholder={`${currentIndex + 1}`}
+                  className="w-16 h-8 text-center text-sm"
+                  disabled={vocabulary.length === 0}
+                />
+                <Button
+                  onClick={handlePageNavigation}
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-3"
+                  disabled={vocabulary.length === 0}
+                >
+                  Go
+                </Button>
               </div>
+            </div>
 
+            <div className="flex items-center gap-3">
               <div className="flex gap-1 bg-secondary rounded-lg p-1">
                 <Button
                   variant={language === "en" ? "default" : "ghost"}
@@ -209,6 +217,7 @@ export default function VocabLearner() {
                     setIsFlipped(false)
                   }}
                   className="h-8 px-4"
+                  disabled={vocabulary.length === 0}
                 >
                   EN
                 </Button>
@@ -220,31 +229,36 @@ export default function VocabLearner() {
                     setIsFlipped(false)
                   }}
                   className="h-8 px-4"
+                  disabled={vocabulary.length === 0}
                 >
                   UZ
                 </Button>
               </div>
-
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleExport} className="gap-2 bg-transparent">
-                  <Download className="w-4 h-4" />
-                  Export
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleClearVocabulary}>
-                  Clear All
-                </Button>
-              </div>
             </div>
+          </div>
 
-            {/* Flashcard */}
+          {/* Flashcard */}
+          {vocabulary.length > 0 ? (
             <Flashcard
               word={vocabulary[currentIndex]}
               isFlipped={isFlipped}
               onFlip={() => setIsFlipped(!isFlipped)}
               language={language}
             />
+          ) : (
+            <Card className="p-12 text-center border-dashed">
+              <BookOpen className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium text-muted-foreground mb-2">
+                No vocabulary loaded
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Upload a vocabulary file or load from database to get started
+              </p>
+            </Card>
+          )}
 
-            {/* Navigation Controls */}
+          {/* Navigation Controls */}
+          {vocabulary.length > 0 && (
             <div className="flex flex-wrap gap-3 justify-center">
               <Button
                 onClick={handlePrevious}
@@ -268,20 +282,20 @@ export default function VocabLearner() {
                 Next
               </Button>
             </div>
+          )}
 
-            {/* Upload New File */}
-            <div className="pt-6 border-t border-border">
-              <details className="cursor-pointer">
-                <summary className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Upload new vocabulary file
-                </summary>
-                <div className="mt-4">
-                  <FileUpload onUpload={handleFileUpload} />
-                </div>
-              </details>
-            </div>
+          {/* Upload New File */}
+          <div className="pt-6 border-t border-border">
+            <details className="cursor-pointer">
+              <summary className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Upload new vocabulary file
+              </summary>
+              <div className="mt-4">
+                <FileUpload onUpload={handleFileUpload} loading={loading} />
+              </div>
+            </details>
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

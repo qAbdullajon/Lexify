@@ -10,11 +10,11 @@ interface ValidationResult {
   error?: string;
 }
 
+// utils/validators.ts
 export function validateJSON(content: string): ValidationResult {
   try {
     const parsed = JSON.parse(content);
 
-    // Check if it's an array
     if (!Array.isArray(parsed)) {
       return {
         valid: false,
@@ -22,7 +22,6 @@ export function validateJSON(content: string): ValidationResult {
       };
     }
 
-    // Check if array is empty
     if (parsed.length === 0) {
       return {
         valid: false,
@@ -30,7 +29,6 @@ export function validateJSON(content: string): ValidationResult {
       };
     }
 
-    // Validate each object
     for (let i = 0; i < parsed.length; i++) {
       const item = parsed[i];
       const position = i + 1;
@@ -69,4 +67,61 @@ export function validateJSON(content: string): ValidationResult {
       }`,
     };
   }
+}
+
+// utils/textToJsonConverter.js
+export function convertTextToJson(text: string) {
+  if (!text.trim()) {
+    return { valid: false, error: "Text is empty" };
+  }
+
+  const lines = text.split("\n").filter((line) => line.trim());
+  const result = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    // Format: english, uzbek, example sentence
+    // Comma bilan ajratilgan, lekin example textda comma bo'lishi mumkin
+    const firstComma = line.indexOf(",");
+    const secondComma = line.indexOf(",", firstComma + 1);
+
+    let en, uz, exampleText;
+
+    if (secondComma === -1) {
+      // Faqat 2 qism: english, uzbek
+      if (firstComma === -1) {
+        return {
+          valid: false,
+          error: `Line ${i + 1}: Must use comma to separate English and Uzbek`,
+        };
+      }
+      en = line.slice(0, firstComma).trim();
+      uz = line.slice(firstComma + 1).trim();
+      exampleText = "";
+    } else {
+      // 3 qism: english, uzbek, example
+      en = line.slice(0, firstComma).trim();
+      uz = line.slice(firstComma + 1, secondComma).trim();
+      exampleText = line.slice(secondComma + 1).trim();
+    }
+
+    if (!en || !uz) {
+      return {
+        valid: false,
+        error: `Line ${i + 1}: Both English and Uzbek are required`,
+      };
+    }
+
+    result.push({
+      uz: uz,
+      en: en,
+      exampleText: exampleText || "",
+    });
+  }
+
+  return {
+    valid: true,
+    data: result,
+  };
 }
