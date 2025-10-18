@@ -55,13 +55,6 @@ export function validateJSON(content: string): ValidationResult {
           error: `Item ${position}: 'en' field is missing or not a string`,
         };
       }
-
-      // if (!item.exampleText || typeof item.exampleText !== "string") {
-      //   return {
-      //     valid: false,
-      //     error: `Item ${position}: 'exampleText' field is missing or not a string`,
-      //   };
-      // }
     }
 
     return {

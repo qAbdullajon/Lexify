@@ -18,9 +18,10 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
   const [isTranslating, setIsTranslating] = useState(false)
 
   useEffect(() => {
-    console.log(isFlipped)
-    if (!isFlipped && language === "en") {
-      playAudio(word.en, "en")
+    if (!isFlipped) {
+      if (language === "en") {
+        playAudio(word.en, "en")
+      }
       setShowTranslation(false)
       setTranslatedText("")
     }

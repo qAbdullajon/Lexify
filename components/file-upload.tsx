@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { FileJson, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -10,7 +10,14 @@ interface FileUploadProps {
 }
 
 export default function FileUpload({ onUpload }: FileUploadProps) {
-  const [jsonInput, setJsonInput] = useState("")
+  const [jsonInput, setJsonInput] = useState("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("vocabulary");
+    if (saved) {
+      setJsonInput(saved);
+    }
+  }, []);
 
   const handleImport = () => {
     if (jsonInput.trim()) {
