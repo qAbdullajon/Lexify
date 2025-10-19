@@ -17,20 +17,21 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
   const [availableWords, setAvailableWords] = useState<string[]>([])
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [isExampeText, setIsExampleText] = useState(false)
+  const [hiddenWords, setHiddenWords] = useState<number[]>([])
 
   useEffect(() => {
     if (!isFlipped) {
       if (language === "en") {
         playAudio(word.en, "en")
       }
+      setShowTranslation(false)
+      setTranslatedText("")
+      setSelectedWords([])
+      setIsCorrect(null)
+      setHiddenWords([])
     } else {
       translateText()
     }
-    setShowTranslation(false)
-    setTranslatedText("")
-    setSelectedWords([])
-    setIsCorrect(null)
-    setIsExampleText(false)
   }, [word, isFlipped])
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
       setAvailableWords(shuffleArray([...words]))
       setSelectedWords([])
       setIsCorrect(null)
+      setHiddenWords([])
     }
   }, [isFlipped, word.exampleText])
 
@@ -79,18 +81,26 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
   }
 
   const handleWordSelect = (word: string, index: number) => {
-    const newAvailable = [...availableWords]
-    newAvailable.splice(index, 1)
-    setAvailableWords(newAvailable)
-    setSelectedWords([...selectedWords, word])
-    setIsCorrect(null)
+    if (!hiddenWords.includes(index)) {
+      setHiddenWords([...hiddenWords, index])
+      setSelectedWords([...selectedWords, word])
+      setIsCorrect(null)
+    }
   }
 
   const handleWordRemove = (word: string, index: number) => {
     const newSelected = [...selectedWords]
     newSelected.splice(index, 1)
     setSelectedWords(newSelected)
-    setAvailableWords([...availableWords, word])
+
+    const newHidden = [...hiddenWords]
+    const removedIndex = newHidden.findIndex(hiddenIndex =>
+      availableWords[hiddenIndex] === word
+    )
+    if (removedIndex !== -1) {
+      newHidden.splice(removedIndex, 1)
+      setHiddenWords(newHidden)
+    }
     setIsCorrect(null)
   }
 
@@ -105,10 +115,10 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
   }
 
   useEffect(() => {
-    if (availableWords.length === 0) {
+    if (availableWords.length > 0 && hiddenWords.length === availableWords.length) {
       checkSentence()
     }
-  }, [availableWords])
+  }, [hiddenWords, availableWords])
 
   const shuffleArray = (array: string[]) => {
     const newArray = [...array]
@@ -120,7 +130,7 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
   }
 
   return (
-    <div className="perspective-1000 w-full mx-auto">
+    <div className="perspective-1000 w-full max-w-md mx-auto">
       <Card
         onClick={handleCardClick}
         className={`relative w-full h-[400px] sm:h-[450px] md:h-[500px] lg:h-[550px] ${!isFlipped ? "cursor-pointer" : "transition-transform duration-500"
@@ -154,7 +164,7 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
         </div>
 
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center p-3 sm:p-4 backface-hidden bg-card text-center overflow-y-auto"
+          className="absolute inset-0 flex flex-col items-center justify-center p-3 sm:p-4 backface-hidden bg-card rounded-xl text-center overflow-y-auto"
           style={{
             backfaceVisibility: "hidden",
             transform: "rotateY(180deg)",
@@ -188,7 +198,7 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
             }
 
             {/* Selected words (user's sentence) */}
-            <div className="py-2 sm:py-3 border-y min-h-[60px] sm:min-h-[70px] border-white/30 mb-4 sm:mb-6 flex flex-wrap gap-1 sm:gap-2 justify-center items-center px-2">
+            <div className="py-2 sm:py-3 border-y min-h-[60px] sm:min-h-[70px] border-white/30 mb-4 sm:mb-6 flex flex-wrap gap-1 sm:gap-2 justify-start items-center px-2">
               {selectedWords.length === 0 ? (
                 ""
               ) : (
@@ -216,7 +226,8 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
                     e.stopPropagation()
                     handleWordSelect(word, index)
                   }}
-                  className="px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm border-[1px] border-white/30 border-b-[3px] active:text-blue-400 active:border-blue-400 text-primary-foreground rounded-lg transition-all"
+                  className={`px-2 py-1.5 sm:px-3 no-select sm:py-2 text-xs sm:text-sm border-[1px] border-white/30 border-b-[3px] active:text-blue-400 active:border-blue-400 text-primary-foreground rounded-lg transition-all ${hiddenWords.includes(index) ? 'bg-[#171a22] !text-[#171a22] !border-[#171a22]' : ''
+                    }`}
                 >
                   {word}
                 </button>
