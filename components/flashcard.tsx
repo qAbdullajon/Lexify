@@ -130,7 +130,7 @@ export default function Flashcard({ word, isFlipped, onFlip, language }: Flashca
   }
 
   return (
-    <div className="perspective-1000 w-full max-w-md mx-auto">
+    <div className="perspective-1000 w-full mx-auto">
       <Card
         onClick={handleCardClick}
         className={`relative w-full h-[400px] sm:h-[450px] md:h-[500px] lg:h-[550px] ${!isFlipped ? "cursor-pointer" : "transition-transform duration-500"
