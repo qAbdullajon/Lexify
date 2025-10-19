@@ -23,9 +23,11 @@ export default function VocabLearner() {
   // LocalStorage dan yuklash
   useEffect(() => {
     const saved = localStorage.getItem("vocabulary")
+    const currentIndex = localStorage.getItem("currentIndex")
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
+        setCurrentIndex(Number(currentIndex))
         setVocabulary(parsed)
       } catch (e) {
         console.error("Failed to load saved vocabulary")
@@ -107,6 +109,7 @@ export default function VocabLearner() {
   const handleNext = () => {
     if (currentIndex < vocabulary.length - 1) {
       setCurrentIndex(currentIndex + 1)
+      localStorage.setItem("currentIndex", String(currentIndex + 1))
       setIsFlipped(false)
       setPageInput(String(currentIndex + 2))
     }
@@ -115,6 +118,7 @@ export default function VocabLearner() {
   const handlePrevious = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1)
+      localStorage.setItem("currentIndex", String(currentIndex - 1))
       setIsFlipped(false)
       setPageInput(String(currentIndex))
     }
@@ -123,6 +127,7 @@ export default function VocabLearner() {
   const handleRandom = () => {
     const randomIndex = Math.floor(Math.random() * vocabulary.length)
     setCurrentIndex(randomIndex)
+    localStorage.setItem("currentIndex", String(randomIndex))
     setIsFlipped(false)
     setPageInput(String(randomIndex + 1))
   }
@@ -284,16 +289,20 @@ export default function VocabLearner() {
           )}
 
           {/* Upload New File */}
-          <div className="pt-6 border-t border-border">
-            <details className="cursor-pointer">
-              <summary className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Upload new vocabulary file
-              </summary>
-              <div className="mt-4">
-                <FileUpload onUpload={handleFileUpload} loading={loading} />
+          {
+            localStorage.getItem("admin") === "admin" && (
+              <div className="pt-6 border-t border-border">
+                <details className="cursor-pointer">
+                  <summary className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Upload new vocabulary file
+                  </summary>
+                  <div className="mt-4">
+                    <FileUpload onUpload={handleFileUpload} loading={loading} />
+                  </div>
+                </details>
               </div>
-            </details>
-          </div>
+            )
+          }
         </div>
       </div>
     </div>
