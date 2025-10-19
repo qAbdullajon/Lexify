@@ -19,16 +19,19 @@ export default function VocabLearner() {
   const [pageInput, setPageInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [fetchLoading, setFetchLoading] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   // LocalStorage dan yuklash
   useEffect(() => {
     const saved = localStorage.getItem("vocabulary")
     const currentIndex = localStorage.getItem("currentIndex")
+    const isAdmin = localStorage.getItem("admin")
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
         setCurrentIndex(Number(currentIndex))
         setVocabulary(parsed)
+        setIsAdmin(isAdmin === "admin" ? true : false)
       } catch (e) {
         console.error("Failed to load saved vocabulary")
       }
@@ -290,7 +293,7 @@ export default function VocabLearner() {
 
           {/* Upload New File */}
           {
-            localStorage.getItem("admin") === "admin" && (
+            isAdmin && (
               <div className="pt-6 border-t border-border">
                 <details className="cursor-pointer">
                   <summary className="text-sm text-muted-foreground hover:text-foreground transition-colors">
