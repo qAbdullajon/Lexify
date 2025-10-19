@@ -139,6 +139,7 @@ export default function VocabLearner() {
     const pageNumber = parseInt(pageInput)
     if (pageNumber >= 1 && pageNumber <= vocabulary.length) {
       setCurrentIndex(pageNumber - 1)
+      localStorage.setItem("currentIndex", String(pageNumber - 1))
       setIsFlipped(false)
     } else {
       setPageInput(String(currentIndex + 1))
